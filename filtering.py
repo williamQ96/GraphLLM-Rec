@@ -1,14 +1,21 @@
 import pandas as pd
 import numpy as np
+import os
+import glob
 
-# Load all 16 CSV files into a single dataframe
-file_paths = ["file1.csv", "file2.csv", ..., "file16.csv"]  # Update with actual file names
+data_directory = "movie_data"
+# movie_data directory 
+file_paths = glob.glob(os.path.join(data_directory, "*.csv"))
+
 df_list = [pd.read_csv(file) for file in file_paths]
 df = pd.concat(df_list, ignore_index=True)
 
 # Select only the relevant columns
 columns_to_keep = ["movie_id", "year", "runtime", "genre", "rating", "director_id", "star_id", "votes", "gross(in $)"]
 df = df[columns_to_keep]
+
+# Track initial number of entries
+initial_entries = df.shape[0]
 
 # Convert data types
 df["year"] = pd.to_numeric(df["year"], errors='coerce')
@@ -26,16 +33,30 @@ df["director_id"].fillna("unknown_director", inplace=True)
 df["star_id"].fillna("unknown_star", inplace=True)
 
 # Remove low-quality movies (e.g., low votes and ratings)
-df = df[(df["votes"] >= 1000) & (df["rating"] >= 4.0)]
+df_filtered = df[(df["votes"] >= 100) & (df["rating"] >= 3.0)]
+
+# shows how many entries is dropped 
+filtered_out_entries = df.shape[0] - df_filtered.shape[0]
+
+# drop out duplicates 
+df_unique = df_filtered.drop_duplicates(subset=["movie_id"])
+
+duplicates_removed = df_filtered.shape[0] - df_unique.shape[0]
 
 # Normalize rating and votes
-df["normalized_rating"] = (df["rating"] - df["rating"].min()) / (df["rating"].max() - df["rating"].min())
-df["normalized_votes"] = (df["votes"] - df["votes"].min()) / (df["votes"].max() - df["votes"].min())
+df_unique["normalized_rating"] = (df_unique["rating"] - df_unique["rating"].min()) / (df_unique["rating"].max() - df_unique["rating"].min())
+df_unique["normalized_votes"] = (df_unique["votes"] - df_unique["votes"].min()) / (df_unique["votes"].max() - df_unique["votes"].min())
 
 # Convert genre column into list format
-df["genre"] = df["genre"].str.split(",")
+df_unique["genre"] = df_unique["genre"].str.split(",")
 
 # Save cleaned data
-df.to_csv("cleaned_movies.csv", index=False)
+df_unique.to_csv("cleaned_movies.csv", index=False)
 
-print("Data Cleaning Complete. Final shape:", df.shape)
+# Print statistics
+final_entries = df_unique.shape[0]
+
+print(f"Initial entries: {initial_entries}")
+print(f"Entries removed due to filtering (low votes/rating): {filtered_out_entries}")
+print(f"Duplicate movies removed: {duplicates_removed}")
+print(f"Final cleaned dataset size: {final_entries}")
