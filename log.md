@@ -1,3 +1,4 @@
+
 2.2 Data Preprocessing
 Cleaning & Filtering:
 Remove missing/null values.
@@ -12,7 +13,7 @@ Encode categorical features (e.g., movie genres).
 Normalize numerical features (e.g., ratings).
 Generate user embeddings (if collaborative filtering is involved).
 
-
+_______________________________________________________________________________
 2/18
 
 we have clean data.
@@ -34,4 +35,16 @@ Each edge represents a relationship between entities:
 (Movie) → directed by → (Director)
 (Movie) → features → (Actor)
 (Movie) → similar_to → (Movie) (optional, based on similarity)
+_______________________________________________________________________________
 
+2/19:
+ideas:
+    incorporate deepseek to understand comments.
+    "AI summary" like amazon items.
+    “Highest-grossing films adjusted for inflation” https://en.wikipedia.org/wiki/List_of_highest-grossing_films 
+
+Questions:
+    how to test for effectiveness
+    need for GUI?
+    
+_______________________________________________________________________________
