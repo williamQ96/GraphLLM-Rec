@@ -33,7 +33,7 @@ df["director_id"].fillna("unknown_director", inplace=True)
 df["star_id"].fillna("unknown_star", inplace=True)
 
 # Remove low-quality movies (e.g., low votes and ratings)
-df_filtered = df[(df["votes"] >= 100) & (df["rating"] >= 3.0)]
+df_filtered = df[(df["votes"] >= 100000) & (df["rating"] >= 4.5)]
 
 # shows how many entries is dropped 
 filtered_out_entries = df.shape[0] - df_filtered.shape[0]

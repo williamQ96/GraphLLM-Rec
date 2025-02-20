@@ -1,9 +1,11 @@
 import pandas as pd
 import networkx as nx
-import ctypes
 import dgl
 import torch
-import itertools
+# torch.set_num_threads(1)
+import matplotlib.pyplot as plt
+# import os
+# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 # Load cleaned data
 df = pd.read_csv("cleaned_movies.csv")
@@ -33,20 +35,30 @@ movie_director_edges = [(movie2idx[row["movie_id"]], director2idx[row["director_
 movie_actor_edges = [(movie2idx[row["movie_id"]], actor2idx[row["star_id"]]) 
                      for _, row in df.iterrows() if row["star_id"] in actor2idx]
 
-# Optional: Create similarity edges (e.g., movies with the same genre & close ratings)
-similar_movie_edges = []
-for genre in genres:
-    similar_movies = df[df["genre"].apply(lambda x: isinstance(x, list) and genre in x)]["movie_id"].tolist()
-    pairs = list(itertools.combinations(similar_movies, 2))  # Pairwise movie connections
-    similar_movie_edges.extend([(movie2idx[a], movie2idx[b]) for a, b in pairs if a in movie2idx and b in movie2idx])
+
+
+print("Movie-Genre Edge Format:", type(movie_genre_edges), len(movie_genre_edges), movie_genre_edges[:5])
+print("Movie-Director Edge Format:", type(movie_director_edges), len(movie_director_edges), movie_director_edges[:5])
+print("Movie-Actor Edge Format:", type(movie_actor_edges), len(movie_actor_edges), movie_actor_edges[:5])
+
 
 # Create DGL graph
+def prepare_edge_list(edge_list):
+    if edge_list and all(len(edge) == 2 for edge in edge_list):  # Ensure edge_list is not empty and has valid pairs
+        src, dst = zip(*edge_list)  # Unzipping into two lists
+        return list(src), list(dst)  # Return as tuple of two lists
+    else:
+        return [], []  # If empty, return empty lists
+    
 graph_data = {
-    ('movie', 'belongs_to', 'genre'): torch.tensor(movie_genre_edges, dtype=torch.int64).T,
-    ('movie', 'directed_by', 'director'): torch.tensor(movie_director_edges, dtype=torch.int64).T,
-    ('movie', 'features', 'actor'): torch.tensor(movie_actor_edges, dtype=torch.int64).T,
-    ('movie', 'similar_to', 'movie'): torch.tensor(similar_movie_edges, dtype=torch.int64).T
+    ('movie', 'belongs_to', 'genre'): prepare_edge_list(movie_genre_edges),
+    ('movie', 'directed_by', 'director'): prepare_edge_list(movie_director_edges),
+    ('movie', 'features', 'actor'): prepare_edge_list(movie_actor_edges),
 }
+
+# for key, value in graph_data.items():
+#     print(f"Edge Type: {key}")
+#     print("Data Type:", type(value))
 
 # Build the heterogeneous graph
 g = dgl.heterograph(graph_data)
@@ -54,4 +66,7 @@ g = dgl.heterograph(graph_data)
 # Save the graph
 dgl.save_graphs("movie_graph.bin", g)
 
+
+print("Constructed DGL Graph:")
 print(g)
+print("Graph construction complete!")
