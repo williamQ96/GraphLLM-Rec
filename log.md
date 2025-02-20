@@ -40,7 +40,8 @@ _______________________________________________________________________________
 2/19:
 ideas:
     incorporate deepseek to understand comments.
-    "AI summary" like amazon items.
+        LLM Cold start option. 
+        "AI summary" like amazon items.
     “Highest-grossing films adjusted for inflation” https://en.wikipedia.org/wiki/List_of_highest-grossing_films 
 
 Questions:
@@ -58,4 +59,8 @@ Resources:
         https://github.com/shyam1998/Movie-Recommendation-System-GUI
     OpenUI:
         https://github.com/wandb/openui
+    Minimind:
+        https://github.com/jingyaogong/minimind
+    Monolith:
+        https://github.com/bytedance/monolith  
 _______________________________________________________________________________
