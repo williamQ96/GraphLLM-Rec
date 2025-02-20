@@ -46,7 +46,43 @@ ideas:
 
 Questions:
     how to test for effectiveness
+        Interpretability & Explainability
+            Can the system explain why it recommended an item?
+            Trust in the system increases if users understand the logic behind recommendations.
+                Understanding Model Behavior
+
+                    Since you don’t have historical data, you likely don’t have ground-truth labels to measure accuracy in the traditional sense. Being able to explain recommendations helps you verify if your system is making reasonable choices.
+                    Debugging & Improving the Model
+
+                    If recommendations don’t make sense, an explainable model helps pinpoint where things might be going wrong. Are the recommendations dominated by certain features? Are they biased toward specific types of inputs?
+                    User Trust & Human Evaluation
+
+                    If your project involves user testing (e.g., asking students to interact with the system), explaining why recommendations were made can help collect more meaningful feedback.
+                    Academic & Presentation Value
+
+                    A well-explained model is easier to present and defend in a class project. It shows that you understand the inner workings of the recommender, rather than just running an algorithm blindly.
+                    How to Implement Interpretability in Your Project
+                    Feature Contribution Analysis
+
+                    If you're using a content-based recommender, you can show which features influenced the recommendation the most.
+                    Example: "This movie was recommended because you liked Sci-Fi and it has a high IMDb rating."
+                    Similarity Scores (for Collaborative or Content-Based Filtering)
+
+                    Show why an item was recommended by displaying similarity scores.
+                    Example: "This book was recommended because it has a 75% similarity with a book you rated highly."
+                    Visualization Techniques
+
+                    t-SNE or PCA: If using an embedding-based approach (like word2vec for items), visualize the embeddings to show how items cluster.
+                    Decision Trees (if using a rule-based approach): Show which rules were used for recommendations.
+                    Shapley Values (SHAP)
+
+                    If using a machine learning-based approach (e.g., a neural network or decision tree model), SHAP can break down how much each feature contributed to the final recommendation.
+                    Human Evaluation
+
+                    Ask test users (even if just classmates) to rate whether the explanations make sense.
+                    Example: Show the top 3 reasons why a recommendation was made and ask users if they agree with the reasoning.
     need for GUI?
+            OpenUI:
     
 Resources:
     the movie DB
@@ -66,3 +102,6 @@ Resources:
     GraphRag:
         https://github.com/microsoft/graphrag
 _______________________________________________________________________________
+
+2/20
+
