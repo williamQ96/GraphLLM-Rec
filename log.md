@@ -104,4 +104,10 @@ Resources:
 _______________________________________________________________________________
 
 2/20
-    
+    graph is constructed
+        but visualization has problem.
+
+    Next up:
+        fix visualization
+        ready to train
+        
