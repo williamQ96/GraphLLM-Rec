@@ -63,4 +63,6 @@ Resources:
         https://github.com/jingyaogong/minimind
     Monolith:
         https://github.com/bytedance/monolith  
+    GraphRag:
+        https://github.com/microsoft/graphrag
 _______________________________________________________________________________
