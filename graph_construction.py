@@ -1,13 +1,15 @@
 import pandas as pd
 import networkx as nx
 import ctypes
-ctypes.CDLL("C:/Users/izayo/anaconda3/envs/py310/lib/site-packages/dgl/dgl.dll")
 import dgl
 import torch
 import itertools
 
 # Load cleaned data
 df = pd.read_csv("cleaned_movies.csv")
+
+# Ensure genres are lists (fix if stored as strings)
+df["genre"] = df["genre"].apply(lambda x: eval(x) if isinstance(x, str) else x)
 
 # Extract unique nodes
 movies = df["movie_id"].unique()
@@ -22,16 +24,21 @@ director2idx = {d: i + len(movies) + len(genres) for i, d in enumerate(directors
 actor2idx = {a: i + len(movies) + len(genres) + len(directors) for i, a in enumerate(actors)}
 
 # Create edges
-movie_genre_edges = [(movie2idx[row["movie_id"]], genre2idx[genre]) for _, row in df.iterrows() if isinstance(row["genre"], list) for genre in row["genre"]]
-movie_director_edges = [(movie2idx[row["movie_id"]], director2idx[row["director_id"]]) for _, row in df.iterrows()]
-movie_actor_edges = [(movie2idx[row["movie_id"]], actor2idx[row["star_id"]]) for _, row in df.iterrows()]
+movie_genre_edges = [(movie2idx[row["movie_id"]], genre2idx[genre]) 
+                     for _, row in df.iterrows() if isinstance(row["genre"], list) for genre in row["genre"]]
+
+movie_director_edges = [(movie2idx[row["movie_id"]], director2idx[row["director_id"]]) 
+                        for _, row in df.iterrows() if row["director_id"] in director2idx]
+
+movie_actor_edges = [(movie2idx[row["movie_id"]], actor2idx[row["star_id"]]) 
+                     for _, row in df.iterrows() if row["star_id"] in actor2idx]
 
 # Optional: Create similarity edges (e.g., movies with the same genre & close ratings)
 similar_movie_edges = []
 for genre in genres:
-    similar_movies = df[df["genre"].apply(lambda x: genre in x)]["movie_id"].tolist()
+    similar_movies = df[df["genre"].apply(lambda x: isinstance(x, list) and genre in x)]["movie_id"].tolist()
     pairs = list(itertools.combinations(similar_movies, 2))  # Pairwise movie connections
-    similar_movie_edges.extend([(movie2idx[a], movie2idx[b]) for a, b in pairs])
+    similar_movie_edges.extend([(movie2idx[a], movie2idx[b]) for a, b in pairs if a in movie2idx and b in movie2idx])
 
 # Create DGL graph
 graph_data = {
