@@ -47,4 +47,15 @@ Questions:
     how to test for effectiveness
     need for GUI?
     
+Resources:
+    the movie DB
+        https://www.themoviedb.org/
+    Alibaba EasyRec 
+        https://github.com/alibaba/EasyRec
+    A list of recommander system repo:
+        https://github.com/grahamjenson/list_of_recommender_systems
+    Movie recommander with GUI
+        https://github.com/shyam1998/Movie-Recommendation-System-GUI
+    OpenUI:
+        https://github.com/wandb/openui
 _______________________________________________________________________________
