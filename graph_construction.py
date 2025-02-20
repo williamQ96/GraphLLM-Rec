@@ -1,5 +1,7 @@
 import pandas as pd
 import networkx as nx
+import ctypes
+ctypes.CDLL("C:/Users/izayo/anaconda3/envs/py310/lib/site-packages/dgl/dgl.dll")
 import dgl
 import torch
 import itertools
@@ -20,7 +22,7 @@ director2idx = {d: i + len(movies) + len(genres) for i, d in enumerate(directors
 actor2idx = {a: i + len(movies) + len(genres) + len(directors) for i, a in enumerate(actors)}
 
 # Create edges
-movie_genre_edges = [(movie2idx[movie], genre2idx[genre]) for _, row in df.iterrows() for genre in row["genre"]]
+movie_genre_edges = [(movie2idx[row["movie_id"]], genre2idx[genre]) for _, row in df.iterrows() if isinstance(row["genre"], list) for genre in row["genre"]]
 movie_director_edges = [(movie2idx[row["movie_id"]], director2idx[row["director_id"]]) for _, row in df.iterrows()]
 movie_actor_edges = [(movie2idx[row["movie_id"]], actor2idx[row["star_id"]]) for _, row in df.iterrows()]
 
