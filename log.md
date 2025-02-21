@@ -110,4 +110,8 @@ _______________________________________________________________________________
     Next up:
         fix visualization
         ready to train
-        
+
+2/21 
+    vLLM api
+        can be used for ai app.
+    
