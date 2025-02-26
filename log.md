@@ -115,14 +115,19 @@ _______________________________________________________________________________
     vLLM api
         can be used for ai app.
 
-    
+    LLM in Feature Augmentation for Recommendation Systems
+        LLM as a feature enhancer rather than a direct recommender.
+        LLM-based prediction: Generates recommendations based on existing reviews made by the user.
+        LLM as a feature converter: Processes reviews to enhance recommendation quality.
+        
+    Cold Start Scenarios:
+    Basic cold start: traditional pick&choice,
+        or, input a natural language paragraph and LLM make prediction base on the text. 
+
+    Memory-based improvement: Enhances recommendations through user interaction over time.
+
     LLM -> feature augmentation
         LLM prediction based on review -> recommander system
         LLM as a feature converter, instead of direct recommander directly.
 
-        我在找电影 -》 LLM 基于现有的review然后生成一个 summary
-        
-        cold start： user 有一个review
-        cold start - alter： 刚注册，进入，（手动选择）， 
-            momery， 通过交互 提升表现。
             
