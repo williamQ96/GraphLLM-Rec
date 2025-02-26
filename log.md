@@ -114,4 +114,15 @@ _______________________________________________________________________________
 2/21 
     vLLM api
         can be used for ai app.
+
     
+    LLM -> feature augmentation
+        LLM prediction based on review -> recommander system
+        LLM as a feature converter, instead of direct recommander directly.
+
+        我在找电影 -》 LLM 基于现有的review然后生成一个 summary
+        
+        cold start： user 有一个review
+        cold start - alter： 刚注册，进入，（手动选择）， 
+            momery， 通过交互 提升表现。
+            
