@@ -131,3 +131,4 @@ _______________________________________________________________________________
         LLM as a feature converter, instead of direct recommander directly.
 
             
+https://github.com/deepseek-ai/awesome-deepseek-integration
