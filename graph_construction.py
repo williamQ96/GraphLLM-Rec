@@ -52,8 +52,13 @@ def prepare_edge_list(edge_list):
     
 graph_data = {
     ('movie', 'belongs_to', 'genre'): prepare_edge_list(movie_genre_edges),
+    ('genre', 'has_movie', 'movie'): prepare_edge_list([(g, m) for m, g in movie_genre_edges]),
+
     ('movie', 'directed_by', 'director'): prepare_edge_list(movie_director_edges),
+    ('director', 'directed', 'movie'): prepare_edge_list([(d, m) for m, d in movie_director_edges]),
+
     ('movie', 'features', 'actor'): prepare_edge_list(movie_actor_edges),
+    ('actor', 'acted_in', 'movie'): prepare_edge_list([(a, m) for m, a in movie_actor_edges]),
 }
 
 # for key, value in graph_data.items():
