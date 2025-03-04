@@ -17,7 +17,9 @@ df["genre"] = df["genre"].apply(lambda x: eval(x) if isinstance(x, str) else x)
 movies = df["movie_id"].unique()
 genres = set(genre for sublist in df["genre"].dropna() for genre in sublist)  # Flatten genre list
 directors = df["director_id"].unique()
-actors = df["star_id"].unique()
+# Ensure each actor is treated individually
+actors = set(a.strip() for actor_list in df["star_id"].dropna() for a in actor_list.split(","))  # Flatten actor lists
+
 
 # Create mappings (indexing for fast access)
 movie2idx = {m: i for i, m in enumerate(movies)}
@@ -32,8 +34,9 @@ movie_genre_edges = [(movie2idx[row["movie_id"]], genre2idx[genre])
 movie_director_edges = [(movie2idx[row["movie_id"]], director2idx[row["director_id"]]) 
                         for _, row in df.iterrows() if row["director_id"] in director2idx]
 
-movie_actor_edges = [(movie2idx[row["movie_id"]], actor2idx[row["star_id"]]) 
-                     for _, row in df.iterrows() if row["star_id"] in actor2idx]
+movie_actor_edges = [(movie2idx[row["movie_id"]], actor2idx[a.strip()]) 
+                     for _, row in df.iterrows() if isinstance(row["star_id"], str) 
+                     for a in row["star_id"].split(",") if a.strip() in actor2idx]
 
 
 

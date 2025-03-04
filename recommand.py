@@ -65,7 +65,7 @@ def get_movie_recommendations(movie_id, movie_embeddings, top_k=5):
     return top_k_indices, similarity_scores[top_k_indices]
 
 # Step 6: Choose a movie ID and generate recommendations
-movie_id = 843 # Change this to test different movies
+movie_id = 20 # Change this to test different movies
 top_k_movies, scores = get_movie_recommendations(movie_id, movie_embeddings, top_k=5)
 
 # Step 7: Display the recommendations
@@ -79,13 +79,3 @@ import pandas as pd
 # Load metadata
 df = pd.read_csv("cleaned_movies.csv")
 imdb_to_metadata = dict(zip(df["movie_id"], df["genre"]))  # Map IMDb ID to Genre
-
-print(f"\nTop 5 similar movies to {imdb_to_title.get(node_index_to_imdb[str(movie_id)], 'Unknown')}:")
-for idx, score in zip(top_k_movies, scores):
-    imdb_id = node_index_to_imdb.get(str(idx.item()), "Unknown")
-    movie_title = imdb_to_title.get(imdb_id, "Unknown")
-    genre = imdb_to_metadata.get(imdb_id, "Unknown Genre")
-    
-    print(f"{movie_title} (IMDb ID: {imdb_id}) - Similarity: {score.item():.4f}")
-    print(f"  - Genre: {genre}")
-    print(f"  - Reason: Shares similar movie embedding and genre.\n")
