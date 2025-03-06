@@ -1,0 +1,13 @@
+{
+    "1": {
+        "views": [
+            "Movie A"
+        ],
+        "reviews": [
+            "Great visuals!"
+        ],
+        "preferences": {
+            "genre": "Action"
+        }
+    }
+}
