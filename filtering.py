@@ -11,7 +11,7 @@ df_list = [pd.read_csv(file) for file in file_paths]
 df = pd.concat(df_list, ignore_index=True)
 
 # Select only the relevant columns
-columns_to_keep = ["movie_id", "year", "runtime", "genre", "rating", "director_id", "star_id", "votes", "gross(in $)"]
+columns_to_keep = ["movie_name", "movie_id", "year", "runtime", "genre", "rating", "director_id", "star_id", "votes", "gross(in $)"]
 df = df[columns_to_keep]
 
 # Track initial number of entries
