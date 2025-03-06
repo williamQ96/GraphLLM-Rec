@@ -67,7 +67,9 @@ def get_movie_recommendations(movie_ids, movie_embeddings, top_k=5):
     similarity_scores = F.cosine_similarity(avg_emb.unsqueeze(0), movie_embeddings)
 
     # Exclude the input movie IDs from the top-k recommendations
-    top_k_indices = similarity_scores.argsort(descending=True)[1:top_k + 1]
+    top_k_indices = similarity_scores.argsort(descending=True)  # Sort indices by similarity
+    top_k_indices = [idx for idx in top_k_indices if idx.item() not in movie_ids]  # Exclude movie_ids from the recommendations
+    top_k_indices = torch.tensor(top_k_indices)[:top_k]
 
     # Select similarity scores for the top-k movies
     top_k_scores = similarity_scores[top_k_indices]
@@ -76,7 +78,7 @@ def get_movie_recommendations(movie_ids, movie_embeddings, top_k=5):
 
 
 # Step 6: Choose multiple movie IDs and generate recommendations
-movie_ids = [20, 30, 875]  # Example list of movie IDs to generate recommendations for
+movie_ids = [968, 994]  # Example list of movie IDs to generate recommendations for
 top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, top_k=5)
 
 import json
