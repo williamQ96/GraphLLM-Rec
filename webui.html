@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieMatcher - Find Your Next Favorite Film</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#4f46e5',
+                        dark: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+
+        // Function to toggle like/dislike state
+        function toggleLike(button) {
+            const isLiked = button.getAttribute('data-liked') === 'true';
+            const movieId = button.getAttribute('data-movie-id');
+            
+            if (isLiked) {
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>';
+                button.classList.remove('bg-red-100', 'text-red-600');
+                button.classList.add('bg-gray-100', 'text-gray-600');
+                button.setAttribute('data-liked', 'false');
+                console.log(`Unliked movie ID: ${movieId}`);
+            } else {
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>';
+                button.classList.remove('bg-gray-100', 'text-gray-600');
+                button.classList.add('bg-red-100', 'text-red-600');
+                button.setAttribute('data-liked', 'true');
+                console.log(`Liked movie ID: ${movieId}`);
+            }
+        }
+
+        // Function to toggle dislike state
+        function toggleDislike(button) {
+            const isDisliked = button.getAttribute('data-disliked') === 'true';
+            const movieId = button.getAttribute('data-movie-id');
+            
+            if (isDisliked) {
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" /></svg>';
+                button.classList.remove('bg-blue-100', 'text-blue-600');
+                button.classList.add('bg-gray-100', 'text-gray-600');
+                button.setAttribute('data-disliked', 'false');
+                console.log(`Removed dislike from movie ID: ${movieId}`);
+            } else {
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" /></svg>';
+                button.classList.remove('bg-gray-100', 'text-gray-600');
+                button.classList.add('bg-blue-100', 'text-blue-600');
+                button.setAttribute('data-disliked', 'true');
+                console.log(`Disliked movie ID: ${movieId}`);
+            }
+        }
+
+        // Function to handle search
+        function handleSearch(event) {
+            event.preventDefault();
+            const searchTerm = document.getElementById('search-input').value;
+            console.log(`Searching for: ${searchTerm}`);
+            // Here you would typically make an API call to your backend
+            // For now, we'll just log the search term
+            
+            // Show a loading state
+            document.getElementById('recommendations').innerHTML = '<div class="col-span-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 flex justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div></div>';
+            
+            // Simulate API call with timeout
+            setTimeout(() => {
+                // Reset the recommendations section with original content
+                document.getElementById('recommendations').innerHTML = originalRecommendations;
+                // Add click event listeners to all movie cards
+                addMovieCardClickListeners();
+            }, 1500);
+        }
+
+        // Store original recommendations HTML for demo purposes
+        let originalRecommendations;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            originalRecommendations = document.getElementById('recommendations').innerHTML;
+            // Add click event listeners to all movie cards
+            addMovieCardClickListeners();
+        });
+
+        // Function to add click event listeners to all movie cards
+        function addMovieCardClickListeners() {
+            const movieCards = document.querySelectorAll('#recommendations > div');
+            movieCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Get movie ID from the like button inside this card
+                    const likeButton = card.querySelector('button[data-movie-id]');
+                    const movieId = likeButton ? likeButton.getAttribute('data-movie-id') : null;
+                    
+                    if (movieId) {
+                        // Get movie details from the card
+                        const title = card.querySelector('h3').textContent;
+                        const infoElements = card.querySelectorAll('.flex.items-center.mb-2 span.text-sm.text-gray-600');
+                        const rating = infoElements[0].textContent;
+                        const year = infoElements[1].textContent;
+                        const genre = infoElements[2].textContent;
+                        const description = card.querySelector('p.text-gray-600.text-sm.mb-4').textContent;
+                        const posterUrl = card.querySelector('img').src;
+                        
+                        // Create a movie object
+                        const movie = {
+                            id: movieId,
+                            title: title,
+                            rating: rating,
+                            year: year,
+                            genre: genre,
+                            description: description,
+                            poster: posterUrl
+                        };
+                        
+                        // Show movie details modal
+                        showMovieDetailsModal(movie);
+                    }
+                });
+            });
+        }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('signInModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('signInModal').classList.add('hidden');
+        }
+
+        // Handle sign in
+        function handleSignIn(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            
+            if (username.trim() !== '') {
+                currentUser = username;
+                // Display username
+                document.getElementById('userDisplayName').textContent = username;
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('signInButton').classList.add('hidden');
+                
+                // Close modal
+                closeModal();
+                
+                console.log(`User signed in: ${username}`);
+
+                // Check if user is new (for demo purposes, we'll use localStorage)
+                const isNewUser = !localStorage.getItem(`user_${username}`);
+                
+                if (isNewUser) {
+                    console.log('New user detected, starting cold start process');
+                    localStorage.setItem(`user_${username}`, 'true');
+                    startColdStart();
+                } else {
+                    console.log('Returning user detected');
+                    updateRecommendations();
+                }
+            }
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('signInModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+            
+            const movieDetailModal = document.getElementById('movieDetailModal');
+            if (event.target === movieDetailModal) {
+                closeMovieDetailModal();
+            }
+            
+            const coldStartModal = document.getElementById('coldStartModal');
+            if (event.target === coldStartModal) {
+                // Don't close cold start modal when clicking outside
+                // This forces users to complete the onboarding
+                event.stopPropagation();
+            }
+        });
+
+        // Sample movie data for cold start
+        const sampleMovies = [
+            {
+                id: 101,
+                title: "The Shawshank Redemption",
+                year: "1994",
+                genre: "Drama",
+                poster: "https://source.unsplash.com/random/300x450?prison"
+            },
+            {
+                id: 102,
+                title: "The Godfather",
+                year: "1972",
+                genre: "Crime",
+                poster: "https://source.unsplash.com/random/300x450?mafia"
+            },
+            {
+                id: 103,
+                title: "The Dark Knight",
+                year: "2008",
+                genre: "Action",
+                poster: "https://source.unsplash.com/random/300x450?batman"
+            },
+            {
+                id: 104,
+                title: "Pulp Fiction",
+                year: "1994",
+                genre: "Crime",
+                poster: "https://source.unsplash.com/random/300x450?crime"
+            },
+            {
+                id: 105,
+                title: "Fight Club",
+                year: "1999",
+                genre: "Drama",
+                poster: "https://source.unsplash.com/random/300x450?fight"
+            },
+            {
+                id: 106,
+                title: "Inception",
+                year: "2010",
+                genre: "Sci-Fi",
+                poster: "https://source.unsplash.com/random/300x450?dream"
+            },
+            {
+                id: 107,
+                title: "The Matrix",
+                year: "1999",
+                genre: "Sci-Fi",
+                poster: "https://source.unsplash.com/random/300x450?matrix"
+            },
+            {
+                id: 108,
+                title: "Interstellar",
+                year: "2014",
+                genre: "Sci-Fi",
+                poster: "https://source.unsplash.com/random/300x450?space"
+            }
+        ];
+
+        // Track user preferences during cold start
+        let coldStartPreferences = {
+            liked: [],
+            disliked: []
+        };
+
+        function startColdStart() {
+            // Reset preferences
+            coldStartPreferences = {
+                liked: [],
+                disliked: []
+            };
+            
+            // Populate cold start modal with 8 movie cards
+            const coldStartMovies = document.getElementById('coldStartMovies');
+            coldStartMovies.innerHTML = sampleMovies.map(movie => `
+        <div class="bg-white rounded-lg shadow-md overflow-hidden" data-movie-id="${movie.id}">
+            <div class="relative pb-[56.25%]">
+                <img src="${movie.poster}" alt="${movie.title} poster" class="absolute h-full w-full object-cover">
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-lg mb-1 truncate">${movie.title}</h4>
+                <p class="text-sm text-gray-600 mb-3">${movie.year} | ${movie.genre}</p>
+                <div class="flex space-x-2 justify-center">
+                    <button 
+                        onclick="rateColdStartMovie(${movie.id}, 'like', this)" 
+                        class="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-gray-200 hover:bg-green-500 hover:text-white text-gray-700 font-medium transition-colors duration-200 text-sm"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        Like
+                    </button>
+                    <button 
+                        onclick="rateColdStartMovie(${movie.id}, 'dislike', this)" 
+                        class="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-gray-200 hover:bg-red-500 hover:text-white text-gray-700 font-medium transition-colors duration-200 text-sm"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                        </svg>
+                        Dislike
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+            
+            // Update progress counter
+            updateColdStartProgress();
+            
+            // Show the modal
+            document.getElementById('coldStartModal').classList.remove('hidden');
+            document.body.classList.add('modal-open');
+        }
+
+        function rateColdStartMovie(movieId, rating, button) {
+            // Add to appropriate preference list
+            if (rating === 'like') {
+                // Remove from disliked if present
+                coldStartPreferences.disliked = coldStartPreferences.disliked.filter(id => id !== movieId);
+                // Add to liked if not already there
+                if (!coldStartPreferences.liked.includes(movieId)) {
+                    coldStartPreferences.liked.push(movieId);
+                }
+                
+                // Update button styles
+                const movieCard = button.closest('[data-movie-id]');
+                const likeBtn = movieCard.querySelector('button:first-of-type');
+                const dislikeBtn = movieCard.querySelector('button:last-of-type');
+                
+                likeBtn.classList.remove('bg-gray-200', 'hover:bg-green-500', 'text-gray-700');
+                likeBtn.classList.add('bg-green-500', 'text-white');
+                
+                dislikeBtn.classList.remove('bg-red-500', 'text-white');
+                dislikeBtn.classList.add('bg-gray-200', 'hover:bg-red-500', 'text-gray-700');
+            } else {
+                // Remove from liked if present
+                coldStartPreferences.liked = coldStartPreferences.liked.filter(id => id !== movieId);
+                // Add to disliked if not already there
+                if (!coldStartPreferences.disliked.includes(movieId)) {
+                    coldStartPreferences.disliked.push(movieId);
+                }
+                
+                // Update button styles
+                const movieCard = button.closest('[data-movie-id]');
+                const likeBtn = movieCard.querySelector('button:first-of-type');
+                const dislikeBtn = movieCard.querySelector('button:last-of-type');
+                
+                dislikeBtn.classList.remove('bg-gray-200', 'hover:bg-red-500', 'text-gray-700');
+                dislikeBtn.classList.add('bg-red-500', 'text-white');
+                
+                likeBtn.classList.remove('bg-green-500', 'text-white');
+                likeBtn.classList.add('bg-gray-200', 'hover:bg-green-500', 'text-gray-700');
+            }
+            
+            // Update progress counter
+            updateColdStartProgress();
+            
+            // Log for debugging
+            console.log(`Rated movie ID ${movieId} as ${rating}`);
+            console.log('Current preferences:', coldStartPreferences);
+        }
+
+        function updateColdStartProgress() {
+            const totalRated = coldStartPreferences.liked.length + coldStartPreferences.disliked.length;
+            const totalMovies = sampleMovies.length;
+            const progressPercent = Math.round((totalRated / totalMovies) * 100);
+            
+            document.getElementById('coldStartProgress').style.width = `${progressPercent}%`;
+            document.getElementById('coldStartProgressText').textContent = `${totalRated} of ${totalMovies} rated`;
+            
+            // Enable finish button if at least 3 movies are rated
+            const finishButton = document.getElementById('finishColdStartBtn');
+            if (totalRated >= 3) {
+                finishButton.disabled = false;
+                finishButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                finishButton.classList.add('bg-primary', 'hover:bg-secondary');
+            } else {
+                finishButton.disabled = true;
+                finishButton.classList.remove('bg-primary', 'hover:bg-secondary');
+                finishButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+            }
+        }
+
+        function finishColdStart() {
+            const totalRated = coldStartPreferences.liked.length + coldStartPreferences.disliked.length;
+            
+            if (totalRated < 3) {
+                alert('Please rate at least 3 movies to continue');
+                return;
+            }
+            
+            // Save preferences to "server" (in a real app, this would be an API call)
+            console.log('Saving user preferences:', coldStartPreferences);
+            
+            // Close the modal
+            document.getElementById('coldStartModal').classList.add('hidden');
+            document.body.classList.remove('modal-open');
+            
+            // Update recommendations based on preferences
+            updateRecommendations();
+        }
+
+        function updateRecommendations() {
+            // In a real app, this would be an API call to get personalized recommendations
+            // For demo purposes, we'll just show all movies if the user liked any sci-fi movies
+            const likedSciFiMovies = coldStartPreferences.liked.some(id => {
+                const movie = sampleMovies.find(m => m.id === id);
+                return movie && movie.genre === 'Sci-Fi';
+            });
+            
+            // Show loading state
+            document.getElementById('recommendations').innerHTML = '<div class="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 flex justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div></div>';
+            
+            // Simulate API call with timeout
+            setTimeout(() => {
+                // Reset the recommendations section with original content
+                document.getElementById('recommendations').innerHTML = originalRecommendations;
+                
+                // Add click event listeners to all movie cards
+                addMovieCardClickListeners();
+                
+                // Show a success message
+                const recommendationsSection = document.querySelector('#recommendations').parentNode;
+                const successMessage = document.createElement('div');
+                successMessage.className = 'bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6';
+                successMessage.innerHTML = `
+                    <p class="font-bold">Recommendations Updated</p>
+                    <p>We've personalized your movie recommendations based on your preferences.</p>
+                `;
+                recommendationsSection.insertBefore(successMessage, recommendationsSection.firstChild);
+                
+                // Auto-remove the message after 5 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 5000);
+            }, 1500);
+        }
+
+        // Function to show movie details modal
+        function showMovieDetailsModal(movie) {
+            currentMovie = movie;
+            
+            // Set movie details in the modal
+            document.getElementById('movieDetailTitle').textContent = movie.title;
+            document.getElementById('movieDetailInfo').textContent = `${movie.year} | ${movie.genre} | Rating: ${movie.rating}`;
+            document.getElementById('movieDetailDescription').textContent = movie.description;
+            
+            // Set movie poster
+            document.getElementById('movieDetailPoster').src = movie.poster;
+            document.getElementById('movieDetailPoster').alt = `${movie.title} poster`;
+            
+            // Reset review textarea
+            document.getElementById('movieReview').value = '';
+            
+            // Update like/dislike buttons state
+            const likeButton = document.getElementById('movieDetailLikeBtn');
+            const dislikeButton = document.getElementById('movieDetailDislikeBtn');
+            
+            // Reset buttons to default state
+            likeButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+            likeButton.classList.add('bg-gray-500', 'hover:bg-red-600');
+            dislikeButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            dislikeButton.classList.add('bg-gray-500', 'hover:bg-blue-600');
+            
+            // Show the modal
+            document.getElementById('movieDetailModal').classList.remove('hidden');
+        }
+
+        // Function to show movie details (old version - kept for compatibility)
+        function showMovieDetails(movieId) {
+            fetch(`/api/movie_details?id=${movieId}`)
+                .then(response => response.json())
+                .then(movie => {
+                    showMovieDetailsModal(movie);
+                });
+        }
+
+        function closeMovieDetailModal() {
+            document.getElementById('movieDetailModal').classList.add('hidden');
+        }
+
+        function likeMovie() {
+            const likeButton = document.getElementById('movieDetailLikeBtn');
+            const dislikeButton = document.getElementById('movieDetailDislikeBtn');
+            
+            // Toggle like button state
+            if (likeButton.classList.contains('bg-red-600')) {
+                // Already liked, remove like
+                likeButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                likeButton.classList.add('bg-gray-500', 'hover:bg-red-600');
+            } else {
+                // Not liked, add like
+                likeButton.classList.remove('bg-gray-500', 'hover:bg-red-600');
+                likeButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                
+                // Remove dislike if present
+                dislikeButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                dislikeButton.classList.add('bg-gray-500', 'hover:bg-blue-600');
+            }
+            
+            // Send rating to server
+            rateMovie('like');
+        }
+
+        function dislikeMovie() {
+            const likeButton = document.getElementById('movieDetailLikeBtn');
+            const dislikeButton = document.getElementById('movieDetailDislikeBtn');
+            
+            // Toggle dislike button state
+            if (dislikeButton.classList.contains('bg-blue-600')) {
+                // Already disliked, remove dislike
+                dislikeButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                dislikeButton.classList.add('bg-gray-500', 'hover:bg-blue-600');
+            } else {
+                // Not disliked, add dislike
+                dislikeButton.classList.remove('bg-gray-500', 'hover:bg-blue-600');
+                dislikeButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                
+                // Remove like if present
+                likeButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                likeButton.classList.add('bg-gray-500', 'hover:bg-red-600');
+            }
+            
+            // Send rating to server
+            rateMovie('dislike');
+        }
+
+        function rateMovie(rating) {
+            if (!currentUser) {
+                alert('Please sign in to rate movies');
+                return;
+            }
+            
+            fetch('/api/rate_movie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: currentUser, movieId: currentMovie.id, rating }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Rating saved:', data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function submitReview() {
+            if (!currentUser) {
+                alert('Please sign in to submit a review');
+                return;
+            }
+            
+            const review = document.getElementById('movieReview').value;
+            if (!review.trim()) {
+                alert('Please write a review before submitting');
+                return;
+            }
+            
+            fetch('/api/submit_review', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: currentUser, movieId: currentMovie.id, review }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Review submitted:', data);
+                alert('Your review has been submitted!');
+                document.getElementById('movieReview').value = '';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+    <style>
+        /* Add this to your existing styles */
+        body.modal-open {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 text-gray-900">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <span class="text-primary font-bold text-xl">MovieMatcher</span>
+                </div>
+                <div class="flex items-center">
+                    <div id="userInfo" class="hidden mr-4">
+                        <span class="text-gray-700">Welcome, <span id="userDisplayName" class="font-medium text-primary"></span></span>
+                    </div>
+                    <button id="signInButton" onclick="openModal()" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sign In Modal -->
+    <div id="signInModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">Sign In</h3>
+            <form id="signInForm" onsubmit="handleSignIn(event)">
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="username" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter your username" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Sign In
+                    </button>
+                    <button type="button" onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hero Section with Search -->
+    <section class="bg-gradient-to-r from-primary to-secondary py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-6">Discover Your Next Favorite Movie</h1>
+            <p class="text-white text-lg mb-8 max-w-2xl mx-auto">Get personalized movie recommendations based on your preferences and viewing history.</p>
+            
+            <form onsubmit="handleSearch(event)" class="max-w-2xl mx-auto relative">
+                <div class="flex shadow-lg rounded-lg overflow-hidden">
+                    <input 
+                        id="search-input"
+                        type="text" 
+                        placeholder="Search for movies, actors, directors..." 
+                        class="w-full px-6 py-4 focus:outline-none text-gray-700"
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-white text-primary px-6 py-4 font-medium hover:bg-gray-100 transition duration-200"
+                    >
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Recommendations Section -->
+    <section class="py-12 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-8">Recommended For You</h2>
+            
+            <!-- Movie Grid -->
+            <!-- Movie Grid -->
+            <div id="recommendations" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Movie Card 1 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x450?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">Inception</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">8.8/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">2010</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Sci-Fi</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="1"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="1"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movie Card 2 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x451?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">The Shawshank Redemption</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">9.3/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">1994</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Drama</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="2"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="2"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movie Card 3 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x452?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">The Dark Knight</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">9.0/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">2008</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Action</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological tests.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="3"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="3"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movie Card 4 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x453?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">Pulp Fiction</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">8.9/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">1994</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Crime</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="4"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="4"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movie Card 5 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x454?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">The Godfather</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">9.2/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">1972</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Crime</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="5"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="5"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movie Card 6 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x455?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">Interstellar</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">8.6/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">2014</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Sci-Fi</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="6"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="6"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movie Card 7 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x456?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">The Matrix</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">8.7/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">1999</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Sci-Fi</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="7"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="7"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movie Card 8 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div class="relative pb-2/3">
+                        <img src="https://source.unsplash.com/random/300x457?movie" alt="Movie poster" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">Parasite</h3>
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-500 mr-1">★</span>
+                            <span class="text-sm text-gray-600">8.5/10</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">2019</span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span class="text-sm text-gray-600">Thriller</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.</p>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="toggleLike(this)" 
+                                data-liked="false" 
+                                data-movie-id="8"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="toggleDislike(this)" 
+                                data-disliked="false" 
+                                data-movie-id="8"
+                                class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            
+            </div>
+        </div>
+    </section>
+    <!-- Cold Start Modal -->
+    <div id="coldStartModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 overflow-y-auto flex-grow">
+                <h3 class="text-2xl font-bold mb-2">Help us get to know your taste</h3>
+                <p class="text-gray-600 mb-6">Please rate these movies to get personalized recommendations. Select "Like" or "Dislike" for each movie.</p>
+                
+                <!-- Progress bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                    <div id="coldStartProgress" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <p id="coldStartProgressText" class="text-sm text-gray-500 mb-6 text-center">0 of 8 rated</p>
+                
+                <!-- Movie Grid -->
+                <div id="coldStartMovies" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Movie cards will be dynamically inserted here -->
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-gray-200 flex justify-between items-center bg-gray-50 rounded-b-lg">
+                <p class="text-sm text-gray-500">Rate at least 3 movies to continue</p>
+                <button 
+                    id="finishColdStartBtn" 
+                    onclick="finishColdStart()" 
+                    class="bg-gray-400 cursor-not-allowed text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
+                    disabled
+                >
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movie Detail Modal -->
+    <div id="movieDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Movie Poster -->
+                <div class="w-full md:w-1/3">
+                    <div class="rounded-lg overflow-hidden shadow-md">
+                        <img id="movieDetailPoster" src="/placeholder.svg" alt="Movie poster" class="w-full h-auto">
+                    </div>
+                </div>
+                
+                <!-- Movie Info -->
+                <div class="w-full md:w-2/3">
+                    <h3 id="movieDetailTitle" class="text-2xl font-bold mb-2"></h3>
+                    <p id="movieDetailInfo" class="text-gray-600 mb-4"></p>
+                    <p id="movieDetailDescription" class="text-gray-700 mb-6"></p>
+                    
+                    <!-- Like/Dislike Buttons -->
+                    <div class="flex space-x-4 mb-6">
+                        <button 
+                            id="movieDetailLikeBtn"
+                            onclick="likeMovie()" 
+                            class="flex items-center justify-center px-4 py-2 rounded-md bg-gray-500 text-white hover:bg-red-600 transition-colors duration-200"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            Like
+                        </button>
+                        <button 
+                            id="movieDetailDislikeBtn"
+                            onclick="dislikeMovie()" 
+                            class="flex items-center justify-center px-4 py-2 rounded-md bg-gray-500 text-white hover:bg-blue-600 transition-colors duration-200"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                            </svg>
+                            Dislike
+                        </button>
+                    </div>
+                    
+                    <!-- Review Section -->
+                    <div class="mb-4">
+                        <label for="movieReview" class="block text-gray-700 text-sm font-bold mb-2">Write a review:</label>
+                        <textarea id="movieReview" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Share your thoughts about this movie..."></textarea>
+                    </div>
+                    
+                    <!-- Submit Review Button -->
+                    <div class="flex justify-between">
+                        <button onclick="submitReview()" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Post Review
+                        </button>
+                        <button onclick="closeMovieDetailModal()" class="text-gray-500 hover:text-gray-700 font-medium">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Additional JavaScript for a production site would go here
+        // This could include API calls to fetch real movie data
+        // and more sophisticated recommendation algorithms
+
+        let currentUser = null;
+        let currentMovie = null;
+
+        // Store original recommendations HTML for demo purposes
+        let originalRecommendations;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            originalRecommendations = document.getElementById('recommendations').innerHTML;
+            // Add click event listeners to all movie cards
+            addMovieCardClickListeners();
+        });
+    </script>
+</body>
+</html>
+
