@@ -24,5 +24,31 @@
         101
       ]
     }
+  },
+  "testing": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        101,
+        102,
+        103
+      ],
+      "disliked": [
+        104
+      ]
+    }
+  },
+  "tester": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        102,
+        104,
+        107
+      ],
+      "disliked": [
+        103
+      ]
+    }
   }
 }
