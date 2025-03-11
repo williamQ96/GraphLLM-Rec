@@ -6,6 +6,7 @@
     <title>MovieMatcher - Find Your Next Favorite Film</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="static/favicon.ico">
     <script>
         tailwind.config = {
             theme: {
@@ -140,32 +141,45 @@
         // Handle sign in
         function handleSignIn(event) {
             event.preventDefault();
-            const username = document.getElementById('username').value;
-            
-            if (username.trim() !== '') {
-                currentUser = username;
-                // Display username
-                document.getElementById('userDisplayName').textContent = username;
+            const username = document.getElementById('username').value.trim();
+
+            if (!username) return;
+
+            fetch('http://127.0.0.1:5000/api/signin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                currentUser = data.user;
+                document.getElementById('userDisplayName').textContent = currentUser;
                 document.getElementById('userInfo').classList.remove('hidden');
                 document.getElementById('signInButton').classList.add('hidden');
-                
-                // Close modal
-                closeModal();
-                
-                console.log(`User signed in: ${username}`);
 
-                // Check if user is new (for demo purposes, we'll use localStorage)
-                const isNewUser = !localStorage.getItem(`user_${username}`);
-                
-                if (isNewUser) {
-                    console.log('New user detected, starting cold start process');
-                    localStorage.setItem(`user_${username}`, 'true');
+                closeModal();
+
+                if (data.cold_start) {
+                    console.log('Cold start required for', currentUser);
                     startColdStart();
                 } else {
-                    console.log('Returning user detected');
                     updateRecommendations();
                 }
-            }
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                alert(`Sign-in failed: ${error.message}`);
+            });
         }
 
         // Close modal when clicking outside
@@ -376,55 +390,136 @@
             const totalRated = coldStartPreferences.liked.length + coldStartPreferences.disliked.length;
             
             if (totalRated < 3) {
-                alert('Please rate at least 3 movies to continue');
+                alert('请至少评价3部电影');
                 return;
             }
             
-            // Save preferences to "server" (in a real app, this would be an API call)
-            console.log('Saving user preferences:', coldStartPreferences);
-            
-            // Close the modal
-            document.getElementById('coldStartModal').classList.add('hidden');
-            document.body.classList.remove('modal-open');
-            
-            // Update recommendations based on preferences
-            updateRecommendations();
+            // 保存偏好到服务器
+            fetch('http://127.0.0.1:5000/api/complete_cold_start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: currentUser,
+                    preferences: coldStartPreferences
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 关闭冷启动模态框
+                document.getElementById('coldStartModal').classList.add('hidden');
+                document.body.classList.remove('modal-open');
+                
+                // 更新推荐
+                updateRecommendations();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`保存偏好失败: ${error.message}`);
+            });
         }
 
         function updateRecommendations() {
-            // In a real app, this would be an API call to get personalized recommendations
-            // For demo purposes, we'll just show all movies if the user liked any sci-fi movies
-            const likedSciFiMovies = coldStartPreferences.liked.some(id => {
-                const movie = sampleMovies.find(m => m.id === id);
-                return movie && movie.genre === 'Sci-Fi';
-            });
+            if (!currentUser) {
+                console.error('No user logged in');
+                return;
+            }
             
-            // Show loading state
+            // 显示加载状态
             document.getElementById('recommendations').innerHTML = '<div class="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 flex justify-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div></div>';
             
-            // Simulate API call with timeout
-            setTimeout(() => {
-                // Reset the recommendations section with original content
-                document.getElementById('recommendations').innerHTML = originalRecommendations;
-                
-                // Add click event listeners to all movie cards
-                addMovieCardClickListeners();
-                
-                // Show a success message
-                const recommendationsSection = document.querySelector('#recommendations').parentNode;
-                const successMessage = document.createElement('div');
-                successMessage.className = 'bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6';
-                successMessage.innerHTML = `
-                    <p class="font-bold">Recommendations Updated</p>
-                    <p>We've personalized your movie recommendations based on your preferences.</p>
-                `;
-                recommendationsSection.insertBefore(successMessage, recommendationsSection.firstChild);
-                
-                // Auto-remove the message after 5 seconds
-                setTimeout(() => {
-                    successMessage.remove();
-                }, 5000);
-            }, 1500);
+            // 从服务器获取推荐
+            fetch(`http://127.0.0.1:5000/api/get_recommendations?username=${encodeURIComponent(currentUser)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // 更新推荐列表
+                    const recommendations = data.recommendations;
+                    document.getElementById('recommendations').innerHTML = recommendations.map(movie => `
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                            <div class="relative pb-2/3">
+                                <img src="${movie.poster}" alt="${movie.title} poster" class="absolute h-full w-full object-cover">
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-bold text-lg mb-2">${movie.title}</h3>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-yellow-500 mr-1">★</span>
+                                    <span class="text-sm text-gray-600">${movie.rating}/10</span>
+                                    <span class="mx-2 text-gray-300">|</span>
+                                    <span class="text-sm text-gray-600">${movie.year}</span>
+                                    <span class="mx-2 text-gray-300">|</span>
+                                    <span class="text-sm text-gray-600">${movie.genre}</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-4">${movie.description}</p>
+                                <div class="flex space-x-2">
+                                    <button 
+                                        onclick="toggleLike(this)" 
+                                        data-liked="false" 
+                                        data-movie-id="${movie.id}"
+                                        class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        onclick="toggleDislike(this)" 
+                                        data-disliked="false" 
+                                        data-movie-id="${movie.id}"
+                                        class="flex items-center justify-center p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors duration-200"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // 添加点击事件监听器
+                    addMovieCardClickListeners();
+                    
+                    // 显示成功消息
+                    const recommendationsSection = document.querySelector('#recommendations').parentNode;
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6';
+                    successMessage.innerHTML = `
+                        <p class="font-bold">推荐已更新</p>
+                        <p>我们已根据您的偏好更新了电影推荐。</p>
+                    `;
+                    recommendationsSection.insertBefore(successMessage, recommendationsSection.firstChild);
+                    
+                    // 5秒后移除成功消息
+                    setTimeout(() => {
+                        successMessage.remove();
+                    }, 5000);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('recommendations').innerHTML = `
+                        <div class="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4">
+                            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+                                <p class="font-bold">获取推荐失败</p>
+                                <p>${error.message}</p>
+                            </div>
+                        </div>
+                    `;
+                });
         }
 
         // Function to show movie details modal
@@ -640,7 +735,6 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold text-gray-900 mb-8">Recommended For You</h2>
             
-            <!-- Movie Grid -->
             <!-- Movie Grid -->
             <div id="recommendations" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <!-- Movie Card 1 -->
@@ -1014,7 +1108,7 @@
                 <!-- Movie Poster -->
                 <div class="w-full md:w-1/3">
                     <div class="rounded-lg overflow-hidden shadow-md">
-                        <img id="movieDetailPoster" src="/placeholder.svg" alt="Movie poster" class="w-full h-auto">
+                        <img id="movieDetailPoster" src="/placeholder.png" alt="Movie poster" class="w-full h-auto">
                     </div>
                 </div>
                 
@@ -1076,8 +1170,6 @@
         let currentUser = null;
         let currentMovie = null;
 
-        // Store original recommendations HTML for demo purposes
-        let originalRecommendations;
         
         document.addEventListener('DOMContentLoaded', function() {
             originalRecommendations = document.getElementById('recommendations').innerHTML;

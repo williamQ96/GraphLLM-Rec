@@ -1,0 +1,28 @@
+{
+  "11": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        101,
+        102,
+        103
+      ],
+      "disliked": []
+    }
+  },
+  "Jasonsoo": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        103,
+        104,
+        106,
+        107
+      ],
+      "disliked": [
+        102,
+        101
+      ]
+    }
+  }
+}
