@@ -49,17 +49,21 @@ print("DEBUG: Model loaded successfully.")
 movie_embeddings = torch.load("movie_embeddings.pth")
 print("DEBUG: Movie embeddings loaded.")
 
+import torch
+import torch.nn.functional as F
 
-def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=None, top_k=5):
+
+def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=None, top_k=5, penalty_factor=0.2):
     """
     Given a list of movie IDs, find the top-k most similar movies based on the average of their embeddings.
-    Disliked movies are penalized in the recommendation.
+    Disliked movies are penalized in the recommendation by reducing similarity scores.
 
     Parameters:
     - movie_ids (list of int): List of movie IDs that the user likes.
     - movie_embeddings (Tensor): Tensor containing the movie embeddings.
     - disliked_movie_ids (list of int): List of movie IDs that the user dislikes (optional).
     - top_k (int): The number of top recommended movies to return.
+    - penalty_factor (float): Factor to reduce similarity for disliked movies (higher is more penalization).
 
     Returns:
     - top_k_indices (Tensor): Indices of the top-k recommended movies.
@@ -80,18 +84,17 @@ def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=No
     # Compute cosine similarity with all other movies
     similarity_scores = F.cosine_similarity(avg_emb.unsqueeze(0), movie_embeddings)
 
-    # Create a mask to penalize disliked movies
-    penalty_mask = torch.zeros_like(similarity_scores)
-
-    # Penalize disliked movies by setting their similarity score to a very low value (e.g., -1)
+    # Apply penalties to the disliked movies
     for disliked_id in disliked_movie_ids:
         if disliked_id < len(similarity_scores):
-            penalty_mask[disliked_id] = float('-inf')  # Set disliked movies to negative infinity to exclude them
+            disliked_emb = movie_embeddings[disliked_id]
+            # Compute the cosine similarity between the disliked movie and all other movies
+            disliked_similarity = F.cosine_similarity(disliked_emb.unsqueeze(0), movie_embeddings)
 
-    # Apply the penalty mask to the similarity scores
-    similarity_scores += penalty_mask
+            # Apply a penalty to the similarity scores of all movies that are similar to the disliked movie
+            similarity_scores -= penalty_factor * disliked_similarity
 
-    # Exclude the input movie IDs from the top-k recommendations
+    # Exclude the input movie IDs and disliked movies from the top-k recommendations
     top_k_indices = similarity_scores.argsort(descending=True)  # Sort indices by similarity
     top_k_indices = [idx for idx in top_k_indices if
                      idx.item() not in movie_ids and idx.item() not in disliked_movie_ids]
@@ -102,9 +105,12 @@ def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=No
 
     return top_k_indices, top_k_scores
 
+
 # Step 6: Choose multiple movie IDs and generate recommendations
 movie_ids = [458, 513]  # Example list of movie IDs to generate recommendations for
-top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, top_k=5)
+disliked = [1098, 1000]
+
+top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=5, penalty_factor=0.2)
 
 import json
 
@@ -140,7 +146,7 @@ file_path = 'node_index_to_imdb.json'
 data = read_json_file(file_path)
 
 # Step 7: Display the recommendations
-print(f"\nTop 5 similar movies to Movies {movie_ids}:")
+print(f"\nTop 5 similar movies to based on liked movies {movie_ids} and disliked movies {disliked}:")
 # for idx, score in zip(top_k_movies, scores):
 #     print(f"Movie {idx.item()} with similarity score: {score.item():.4f}")
 
@@ -151,7 +157,12 @@ imdb_to_metadata = dict(zip(df["movie_id"], df["genre"]))  # Map IMDb ID to Genr
 for movie_id in movie_ids:
     name = get_name_by_id(csv_filepath, data[str(movie_id)])
     genre = imdb_to_metadata.get(data[str(movie_id)], "Unknown")
-    print(f"Movie {movie_id} = {name} (Genre: {genre})")
+    print(f"Liked Movie {movie_id} = {name} (Genre: {genre})")
+
+for dislike in disliked:
+    name = get_name_by_id(csv_filepath, data[str(dislike)])
+    genre = imdb_to_metadata.get(data[str(dislike)], "Unknown")
+    print(f"Disliked Movie {dislike} = {name} (Genre: {genre})")
 
 # Example of displaying genre for the recommended movies
 for idx, score in zip(top_k_movies, scores):

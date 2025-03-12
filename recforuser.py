@@ -39,7 +39,7 @@ ids = user_preferences.get(profile, {}).get("liked", [])
 disliked = user_preferences.get(profile, {}).get("disliked", [])
 
 movie_ids = ids
-top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, top_k=5)
+top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=5)
 
 def get_name_by_id(csv_filepath, target_id):
     with open(csv_filepath, 'r') as file:
@@ -59,19 +59,20 @@ csv_filepath = 'cleaned_movies.csv'
 file_path = 'node_index_to_imdb.json'
 data = read_json_file(file_path)
 
-# Step 7: Display the recommendations
-print(f"\nTop 5 similar movies to Movies {movie_ids}:")
-# for idx, score in zip(top_k_movies, scores):
-#     print(f"Movie {idx.item()} with similarity score: {score.item():.4f}")
+print(f"\nTop 5 similar movies to based on liked movies {movie_ids} and disliked movies {disliked}:")
 
-# Step 8: Load metadata for genre information
 df = pd.read_csv("cleaned_movies.csv")
 imdb_to_metadata = dict(zip(df["movie_id"], df["genre"]))  # Map IMDb ID to Genre
 
 for movie_id in movie_ids:
     name = get_name_by_id(csv_filepath, data[str(movie_id)])
     genre = imdb_to_metadata.get(data[str(movie_id)], "Unknown")
-    print(f"Movie {movie_id} = {name} (Genre: {genre})")
+    print(f"Liked Movie {movie_id} = {name} (Genre: {genre})")
+
+for dislike in disliked:
+    name = get_name_by_id(csv_filepath, data[str(dislike)])
+    genre = imdb_to_metadata.get(data[str(dislike)], "Unknown")
+    print(f"Disliked Movie {dislike} = {name} (Genre: {genre})")
 
 # Example of displaying genre for the recommended movies
 for idx, score in zip(top_k_movies, scores):
