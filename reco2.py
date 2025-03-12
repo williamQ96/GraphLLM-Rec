@@ -90,14 +90,14 @@ def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=No
     #         disliked_emb = movie_embeddings[disliked_id]
     #         # Compute the cosine similarity between the disliked movie and all other movies
     #         disliked_similarity = F.cosine_similarity(disliked_emb.unsqueeze(0), movie_embeddings)
+    if len(disliked_movie_ids) > 0:
+        disliked_movie_embs = movie_embeddings[disliked_movie_ids]  # Get the embeddings of the target movies
+        disliked_avg_emb = disliked_movie_embs.mean(dim=0)  # Compute the average of the embeddings
 
-    disliked_movie_embs = movie_embeddings[disliked_movie_ids]  # Get the embeddings of the target movies
-    disliked_avg_emb = disliked_movie_embs.mean(dim=0)  # Compute the average of the embeddings
-
-    # Compute the cosine similarity between the disliked movie and all other movies
-    disliked_similarity = F.cosine_similarity(disliked_avg_emb.unsqueeze(0), movie_embeddings)
-    # Apply a penalty to the similarity scores of all movies that are similar to the disliked movie
-    similarity_scores -= penalty_factor * disliked_similarity
+        # Compute the cosine similarity between the disliked movie and all other movies
+        disliked_similarity = F.cosine_similarity(disliked_avg_emb.unsqueeze(0), movie_embeddings)
+        # Apply a penalty to the similarity scores of all movies that are similar to the disliked movie
+        similarity_scores -= penalty_factor * disliked_similarity
 
     # Exclude the input movie IDs and disliked movies from the top-k recommendations
     top_k_indices = similarity_scores.argsort(descending=True)  # Sort indices by similarity
@@ -113,7 +113,7 @@ def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=No
 
 # Step 6: Choose multiple movie IDs and generate recommendations
 movie_ids = [458, 513]  # Example list of movie IDs to generate recommendations for
-disliked = [1098, 1000]
+disliked = [100, 1098]
 
 top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=5, penalty_factor=0.2)
 
