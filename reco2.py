@@ -53,7 +53,7 @@ import torch
 import torch.nn.functional as F
 
 
-def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=None, top_k=5, penalty_factor=0.2):
+def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=None, top_k=5, penalty_factor=0.5):
     """
     Given a list of movie IDs, find the top-k most similar movies based on the average of their embeddings.
     Disliked movies are penalized in the recommendation by reducing similarity scores.
@@ -84,15 +84,20 @@ def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=No
     # Compute cosine similarity with all other movies
     similarity_scores = F.cosine_similarity(avg_emb.unsqueeze(0), movie_embeddings)
 
-    # Apply penalties to the disliked movies
-    for disliked_id in disliked_movie_ids:
-        if disliked_id < len(similarity_scores):
-            disliked_emb = movie_embeddings[disliked_id]
-            # Compute the cosine similarity between the disliked movie and all other movies
-            disliked_similarity = F.cosine_similarity(disliked_emb.unsqueeze(0), movie_embeddings)
+    # # Apply penalties to the disliked movies
+    # for disliked_id in disliked_movie_ids:
+    #     if disliked_id < len(similarity_scores):
+    #         disliked_emb = movie_embeddings[disliked_id]
+    #         # Compute the cosine similarity between the disliked movie and all other movies
+    #         disliked_similarity = F.cosine_similarity(disliked_emb.unsqueeze(0), movie_embeddings)
 
-            # Apply a penalty to the similarity scores of all movies that are similar to the disliked movie
-            similarity_scores -= penalty_factor * disliked_similarity
+    disliked_movie_embs = movie_embeddings[disliked_movie_ids]  # Get the embeddings of the target movies
+    disliked_avg_emb = disliked_movie_embs.mean(dim=0)  # Compute the average of the embeddings
+
+    # Compute the cosine similarity between the disliked movie and all other movies
+    disliked_similarity = F.cosine_similarity(disliked_avg_emb.unsqueeze(0), movie_embeddings)
+    # Apply a penalty to the similarity scores of all movies that are similar to the disliked movie
+    similarity_scores -= penalty_factor * disliked_similarity
 
     # Exclude the input movie IDs and disliked movies from the top-k recommendations
     top_k_indices = similarity_scores.argsort(descending=True)  # Sort indices by similarity
