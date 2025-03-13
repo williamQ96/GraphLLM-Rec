@@ -111,66 +111,66 @@ def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=No
     return top_k_indices, top_k_scores
 
 
-# Step 6: Choose multiple movie IDs and generate recommendations
-movie_ids = [458, 513]  # Example list of movie IDs to generate recommendations for
-disliked = [100, 1098]
-
-top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=5, penalty_factor=0.2)
-
-import json
-
-def read_json_file(file_path):
-    try:
-        with open(file_path, 'r') as file:
-            data = json.load(file)
-            return data
-    except FileNotFoundError:
-        print(f"Error: File not found at {file_path}")
-        return None
-    except json.JSONDecodeError:
-        print(f"Error: Invalid JSON format in {file_path}")
-        return None
-
-
-def get_name_by_id(csv_filepath, target_id):
-    with open(csv_filepath, 'r') as file:
-        reader = csv.reader(file)
-        header = next(reader)  # Skip the header row
-
-        # Determine the index of 'ID' and 'Name' columns
-        id_index = header.index('movie_id')
-        name_index = header.index('movie_name')
-
-        for row in reader:
-            if row[id_index] == str(target_id):
-                return row[name_index]
-    return None
-
-csv_filepath = 'cleaned_movies.csv'
-file_path = 'node_index_to_imdb.json'
-data = read_json_file(file_path)
-
-# Step 7: Display the recommendations
-print(f"\nTop 5 similar movies to based on liked movies {movie_ids} and disliked movies {disliked}:")
+# # Step 6: Choose multiple movie IDs and generate recommendations
+# movie_ids = [1099]  # Example list of movie IDs to generate recommendations for
+# disliked = []
+#
+# top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=5, penalty_factor=0.2)
+#
+# import json
+#
+# def read_json_file(file_path):
+#     try:
+#         with open(file_path, 'r') as file:
+#             data = json.load(file)
+#             return data
+#     except FileNotFoundError:
+#         print(f"Error: File not found at {file_path}")
+#         return None
+#     except json.JSONDecodeError:
+#         print(f"Error: Invalid JSON format in {file_path}")
+#         return None
+#
+#
+# def get_name_by_id(csv_filepath, target_id):
+#     with open(csv_filepath, 'r') as file:
+#         reader = csv.reader(file)
+#         header = next(reader)  # Skip the header row
+#
+#         # Determine the index of 'ID' and 'Name' columns
+#         id_index = header.index('movie_id')
+#         name_index = header.index('movie_name')
+#
+#         for row in reader:
+#             if row[id_index] == str(target_id):
+#                 return row[name_index]
+#     return None
+#
+# csv_filepath = 'cleaned_movies.csv'
+# file_path = 'node_index_to_imdb.json'
+# data = read_json_file(file_path)
+#
+# # Step 7: Display the recommendations
+# print(f"\nTop 5 similar movies to based on liked movies {movie_ids} and disliked movies {disliked}:")
+# # for idx, score in zip(top_k_movies, scores):
+# #     print(f"Movie {idx.item()} with similarity score: {score.item():.4f}")
+#
+# # Step 8: Load metadata for genre information
+# df = pd.read_csv("cleaned_movies.csv")
+# imdb_to_metadata = dict(zip(df["movie_id"], df["genre"]))  # Map IMDb ID to Genre
+#
+# for movie_id in movie_ids:
+#     name = get_name_by_id(csv_filepath, data[str(movie_id)])
+#     genre = imdb_to_metadata.get(data[str(movie_id)], "Unknown")
+#     print(f"Liked Movie {movie_id} = {name} (Genre: {genre})")
+#
+# for dislike in disliked:
+#     name = get_name_by_id(csv_filepath, data[str(dislike)])
+#     genre = imdb_to_metadata.get(data[str(dislike)], "Unknown")
+#     print(f"Disliked Movie {dislike} = {name} (Genre: {genre})")
+#
+# # Example of displaying genre for the recommended movies
 # for idx, score in zip(top_k_movies, scores):
-#     print(f"Movie {idx.item()} with similarity score: {score.item():.4f}")
-
-# Step 8: Load metadata for genre information
-df = pd.read_csv("cleaned_movies.csv")
-imdb_to_metadata = dict(zip(df["movie_id"], df["genre"]))  # Map IMDb ID to Genre
-
-for movie_id in movie_ids:
-    name = get_name_by_id(csv_filepath, data[str(movie_id)])
-    genre = imdb_to_metadata.get(data[str(movie_id)], "Unknown")
-    print(f"Liked Movie {movie_id} = {name} (Genre: {genre})")
-
-for dislike in disliked:
-    name = get_name_by_id(csv_filepath, data[str(dislike)])
-    genre = imdb_to_metadata.get(data[str(dislike)], "Unknown")
-    print(f"Disliked Movie {dislike} = {name} (Genre: {genre})")
-
-# Example of displaying genre for the recommended movies
-for idx, score in zip(top_k_movies, scores):
-    genre = imdb_to_metadata.get(data[str(idx.item())], "Unknown")
-    name = get_name_by_id(csv_filepath, data[str(idx.item())])
-    print(f"({name}) Movie {idx.item()} with similarity score: {score.item():.4f}, Genre: {genre}")
+#     genre = imdb_to_metadata.get(data[str(idx.item())], "Unknown")
+#     name = get_name_by_id(csv_filepath, data[str(idx.item())])
+#     print(f"({name}) Movie {idx.item()} with similarity score: {score.item():.4f}, Genre: {genre}")

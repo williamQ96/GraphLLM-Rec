@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import os
 import random
+from recforuser import *
 
 app = Flask(__name__)
 
@@ -215,55 +216,24 @@ def rate_movie():
     save_ratings(ratings)
     return jsonify({"success": True})
 
+
 @app.route('/api/get_recommendations', methods=['GET'])
 def get_recommendations():
     username = request.args.get('username')
-    
+
     if not username:
         return jsonify({"error": "用户名不能为空"}), 400
-    
+
     # 加载用户数据和评分数据
     users = load_users()
     ratings = load_ratings()
-    
+
     if username not in users:
         return jsonify({"error": "用户不存在"}), 404
-    
-    user_data = users[username]
-    user_ratings = ratings.get(username, {"liked": [], "disliked": []})
-    
-    # 获取用户喜欢的电影类型
-    liked_genres = set()
-    for movie_id in user_ratings["liked"]:
-        movie = next((m for m in SAMPLE_MOVIES if m["id"] == movie_id), None)
-        if movie:
-            liked_genres.add(movie["genre"])
-    
-    # 根据用户偏好筛选推荐电影
-    recommendations = []
-    rated_movies = set(user_ratings["liked"] + user_ratings["disliked"])
-    
-    # 首先添加用户喜欢类型的未评分电影
-    for movie in SAMPLE_MOVIES:
-        if movie["id"] not in rated_movies and movie["genre"] in liked_genres:
-            recommendations.append(movie)
-    
-    # 如果推荐数量不足，添加其他未评分的高分电影
-    if len(recommendations) < 4:
-        for movie in SAMPLE_MOVIES:
-            if movie["id"] not in rated_movies and movie not in recommendations and float(movie["rating"]) >= 9.0:
-                recommendations.append(movie)
-    
-    # 如果还是不足，随机添加未评分的电影
-    remaining_movies = [m for m in SAMPLE_MOVIES if m["id"] not in rated_movies and m not in recommendations]
-    while len(recommendations) < 4 and remaining_movies:
-        movie = random.choice(remaining_movies)
-        recommendations.append(movie)
-        remaining_movies.remove(movie)
-    
-    # 随机打乱推荐顺序
-    random.shuffle(recommendations)
-    
+
+    # Get recommendations by calling user_rec from recommender.py
+    recommendations = user_rec(username)
+
     return jsonify({"recommendations": recommendations})
 
 if __name__ == '__main__':
