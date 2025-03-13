@@ -67,7 +67,6 @@ def user_rec(profile):
     imdb_to_metadata3 = dict(zip(df["movie_id"], df["year"]))
 
 
-
     recommendations = []
     for idx in top_k_movies:
         name = get_name_by_id("cleaned_movies.csv", data[str(idx.item())])
@@ -75,8 +74,8 @@ def user_rec(profile):
         year = imdb_to_metadata3.get(data[str(idx.item())], "Unknown")
         rating = imdb_to_metadata2.get(data[str(idx.item())], "Unknown")
         recommendations.append({
-            "movie_id": data[str(idx.item())],
-            "name": name,
+            "id": idx.item(),
+            "title": name,
             "genre": genre,
             "year": year,
             "rating": rating
