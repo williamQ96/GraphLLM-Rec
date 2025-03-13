@@ -50,5 +50,128 @@
         103
       ]
     }
+  },
+  "user11": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        "I absolutely loved the thrilling action scenes and the deep character development!"
+      ],
+      "disliked": []
+    }
+  },
+  "123": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        101,
+        102,
+        103,
+        104
+      ],
+      "disliked": []
+    },
+    "comments": [
+      "1111"
+    ]
+  },
+  "112": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        101,
+        103
+      ],
+      "disliked": [
+        102
+      ]
+    }
+  },
+  "11111": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        102,
+        103
+      ],
+      "disliked": [
+        101
+      ]
+    }
+  },
+  "1341": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        102,
+        103,
+        104
+      ],
+      "disliked": []
+    }
+  },
+  "15151": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        101,
+        102,
+        104
+      ],
+      "disliked": []
+    }
+  },
+  "q": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        102,
+        101,
+        103
+      ],
+      "disliked": []
+    }
+  },
+  "1111": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        103,
+        104,
+        102
+      ],
+      "disliked": []
+    }
+  },
+  "s1": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        101,
+        103,
+        104,
+        "123333"
+      ],
+      "disliked": []
+    },
+    "comments": [
+      "great",
+      "123333"
+    ]
+  },
+  "q2": {
+    "completed_cold_start": true,
+    "preferences": {
+      "liked": [
+        102,
+        103,
+        104,
+        "12"
+      ],
+      "disliked": []
+    },
+    "comments": [
+      "12"
+    ]
   }
 }

@@ -1176,6 +1176,43 @@
             // Add click event listeners to all movie cards
             addMovieCardClickListeners();
         });
+
+
+        function submitReview() {
+    if (!currentUser) {
+        alert('Please sign in to submit a review');
+        return;
+    }
+
+    const comment = document.getElementById('movieReview').value.trim();
+
+    if (!comment) {
+        alert('Please write a review before submitting');
+        return;
+    }
+
+    fetch('/api/submit_comment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: currentUser, comment })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error("Error:", data.error);
+        } else {
+            console.log("Success:", data);
+            alert('Your review has been submitted!');
+            document.getElementById('movieReview').value = '';
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+}
+
     </script>
 </body>
 </html>

@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 import os
 import random
+from flask import send_from_directory
+
+from comment_analysis import update_user_preferences  # Import feature extraction function
 
 app = Flask(__name__)
 
@@ -126,41 +129,100 @@ def save_ratings(ratings):
 def index():
     return render_template('webui.html')
 
-@app.route('/api/signin', methods=['POST'])
+@app.route('/placeholder.png')
+def serve_placeholder():
+    return send_from_directory("static", "placeholder.png")
+
+@app.route("/api/signin", methods=["POST"])
 def signin():
-    data = request.json
-    username = data.get('username', '').strip()
+    """
+    API endpoint to handle user sign-in.
+    """
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "请求数据为空"}), 400
+        
+        username = data.get("username", "").strip()
 
-    if not username:
-        return jsonify({"error": "用户名不能为空"}), 400
+        if not username:
+            return jsonify({"error": "用户名不能为空"}), 400
 
-    # 加载用户数据
-    users = load_users()
-    
-    # 检查用户是否存在
-    user_data = users.get(username, {})
-    is_new_user = not user_data
-    
-    if is_new_user:
-        # 创建新用户
-        users[username] = {
-            "completed_cold_start": False,
-            "preferences": {
-                "liked": [],
-                "disliked": []
+        # Load existing users data
+        users = load_users()
+
+        # Ensure the user exists in the data
+        if username not in users:
+            users[username] = {
+                "completed_cold_start": False,
+                "preferences": {
+                    "liked": [],
+                    "disliked": []
+                },
+                "comments": []
             }
-        }
+            save_users(users)
+            return jsonify({"user": username, "cold_start": True})
+
+        return jsonify({"user": username, "cold_start": not users[username]["completed_cold_start"]})
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debug: Print the error
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/submit_review", methods=["POST"])
+def submit_review():
+    return submit_comment() 
+
+@app.route("/api/submit_comment", methods=["POST"])
+def submit_comment():
+    """
+    API endpoint to process user comments.
+    """
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "请求数据为空"}), 400
+        
+        username = data.get("username", "").strip()
+        comment = data.get("comment", "").strip()
+
+        # Debug: Print incoming data
+        print(f"Received username: '{username}', comment: '{comment}'")
+
+        if not username or not comment:
+            return jsonify({"error": "用户名和评论不能为空"}), 400
+
+        # Load existing users data
+        users = load_users()
+
+        # Ensure the user exists in the data
+        if username not in users:
+            users[username] = {
+                "completed_cold_start": False,
+                "preferences": {
+                    "liked": [],
+                    "disliked": []
+                },
+                "comments": []
+            }
+
+        # Append the new comment to the user's comments
+        if "comments" not in users[username]:
+            users[username]["comments"] = []
+        users[username]["comments"].append(comment)
+
+        # Update user preferences based on the comment
+        updated_preferences = update_user_preferences(username, comment, USERS_FILE)
+
+        # Save the updated users data
         save_users(users)
-        return jsonify({
-            "user": username,
-            "cold_start": True
-        })
-    
-    # 返回现有用户信息
-    return jsonify({
-        "user": username,
-        "cold_start": not user_data.get("completed_cold_start", False)
-    })
+
+        return jsonify({"status": "success", "updated_preferences": updated_preferences})
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debug: Print the error
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/complete_cold_start', methods=['POST'])
 def complete_cold_start():
