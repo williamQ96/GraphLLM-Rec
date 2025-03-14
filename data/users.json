@@ -23,7 +23,11 @@
         102,
         101
       ]
-    }
+    },
+    "comments": [
+      "I love this movie",
+      "I like batman"
+    ]
   },
   "testing": {
     "completed_cold_start": true,

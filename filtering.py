@@ -11,7 +11,7 @@ df_list = [pd.read_csv(file) for file in file_paths]
 df = pd.concat(df_list, ignore_index=True)
 
 # Select only the relevant columns
-columns_to_keep = ["movie_name", "movie_id", "year", "runtime", "genre", "rating", "director_id", "star_id", "votes", "gross(in $)"]
+columns_to_keep = ["movie_name", "movie_id", "year", "genre", "rating", "director_id", "star_id", "votes", "description"]
 df = df[columns_to_keep]
 
 # Track initial number of entries
@@ -19,18 +19,15 @@ initial_entries = df.shape[0]
 
 # Convert data types
 df["year"] = pd.to_numeric(df["year"], errors='coerce')
-df["runtime"] = pd.to_numeric(df["runtime"], errors='coerce')
 df["rating"] = pd.to_numeric(df["rating"], errors='coerce')
 df["votes"] = pd.to_numeric(df["votes"], errors='coerce')
-df["gross(in $)"] = pd.to_numeric(df["gross(in $)"], errors='coerce')
 
 # Handle missing values
 df["rating"].fillna(df["rating"].median(), inplace=True)
-df["runtime"].fillna(df["runtime"].median(), inplace=True)
 df["votes"].fillna(df["votes"].median(), inplace=True)
-df["gross(in $)"].fillna(df["gross(in $)"].median(), inplace=True)
 df["director_id"].fillna("unknown_director", inplace=True)
 df["star_id"].fillna("unknown_star", inplace=True)
+df["description"].fillna("no description provided", inplace=True)
 
 # Remove low-quality movies (e.g., low votes and ratings)
 df_filtered = df[(df["votes"] >= 100000) & (df["rating"] >= 4.5)]

@@ -65,6 +65,7 @@ def user_rec(profile):
     imdb_to_metadata = dict(zip(df["movie_id"], df["genre"])) # Map IMDb ID to Genre
     imdb_to_metadata2 = dict(zip(df["movie_id"], df["rating"]))
     imdb_to_metadata3 = dict(zip(df["movie_id"], df["year"]))
+    imdb_to_metadata4 = dict(zip(df["movie_id"], df["description"]))
 
 
     recommendations = []
@@ -73,12 +74,14 @@ def user_rec(profile):
         genre = imdb_to_metadata.get(data[str(idx.item())], "Unknown")
         year = imdb_to_metadata3.get(data[str(idx.item())], "Unknown")
         rating = imdb_to_metadata2.get(data[str(idx.item())], "Unknown")
+        description = imdb_to_metadata4.get(data[str(idx.item())], "Unknown")
         recommendations.append({
             "id": idx.item(),
             "title": name,
             "genre": genre,
             "year": year,
-            "rating": rating
+            "rating": rating,
+            "description": description
         })
 
     return recommendations

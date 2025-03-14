@@ -53,7 +53,7 @@ import torch
 import torch.nn.functional as F
 
 
-def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=None, top_k=5, penalty_factor=0.5):
+def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=None, top_k=5, penalty_factor=0.2):
     """
     Given a list of movie IDs, find the top-k most similar movies based on the average of their embeddings.
     Disliked movies are penalized in the recommendation by reducing similarity scores.
@@ -112,10 +112,10 @@ def get_movie_recommendations(movie_ids, movie_embeddings, disliked_movie_ids=No
 
 
 # # Step 6: Choose multiple movie IDs and generate recommendations
-# movie_ids = [1099]  # Example list of movie IDs to generate recommendations for
-# disliked = []
+# movie_ids = [1576]  # Example list of movie IDs to generate recommendations for
+# disliked = [101, 102]
 #
-# top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=5, penalty_factor=0.2)
+# top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=8, penalty_factor=0.5)
 #
 # import json
 #
