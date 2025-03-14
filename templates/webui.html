@@ -705,6 +705,19 @@
         </div>
     </div>
 
+    <!-- Watch With Button -->
+    <button id="watchWithButton" class="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded">Watch With</button>
+
+    <!-- Modal for inputting another username -->
+    <div id="watchWithModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded shadow-lg">
+            <h2 class="text-xl mb-4">Watch With</h2>
+            <input type="text" id="otherUsername" class="border p-2 w-full mb-4" placeholder="Enter another username">
+            <button id="submitWatchWith" class="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+            <button id="closeWatchWithModal" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Close</button>
+        </div>
+    </div>
+
     <!-- Hero Section with Search -->
     <section class="bg-gradient-to-r from-primary to-secondary py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -1170,7 +1183,70 @@
         let currentUser = null;
         let currentMovie = null;
 
-        
+        function handleSignIn(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        fetch('/api/signin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                currentUser = data.user;
+                document.getElementById('userDisplayName').textContent = currentUser;
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('signInModal').classList.add('hidden');
+                alert('Sign in successful!');
+                fetchRecommendations(currentUser);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Sign in failed!');
+        });
+    }
+    function fetchRecommendations(username) {
+        fetch(`http://127.0.0.1:5000/api/get_recommendations?username=${encodeURIComponent(username)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Update recommendations list
+                const recommendations = data.recommendations;
+                document.getElementById('recommendations').innerHTML = recommendations.map(movie => `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                        <div class="relative pb-2/3">
+                            <img src="${movie.poster}" alt="${movie.title} poster" class="absolute h-full w-full object-cover">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">${movie.title}</h3>
+                            <div class="flex items-center mb-2">
+                                <span class="text-gray-600">${movie.year}</span>
+                                <span class="ml-2 text-gray-600">${movie.genre}</span>
+                            </div>
+                            <p class="text-gray-700">${movie.description}</p>
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`Failed to get recommendations: ${error.message}`);
+            });
+    }
         document.addEventListener('DOMContentLoaded', function() {
             originalRecommendations = document.getElementById('recommendations').innerHTML;
             // Add click event listeners to all movie cards
@@ -1213,6 +1289,54 @@
     });
 }
 
+    document.getElementById('watchWithButton').addEventListener('click', function() {
+            document.getElementById('watchWithModal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeWatchWithModal').addEventListener('click', function() {
+            document.getElementById('watchWithModal').classList.add('hidden');
+        });
+
+        document.getElementById('submitWatchWith').addEventListener('click', function() {
+            const otherUsername = document.getElementById('otherUsername').value.trim();
+            if (otherUsername) {
+                fetch(`http://127.0.0.1:5000/api/get_recommendations?username=${encodeURIComponent(currentUser)}&otherUsername=${encodeURIComponent(otherUsername)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        
+                        // Update recommendations list
+                        const recommendations = data.recommendations;
+                        document.getElementById('recommendations').innerHTML = recommendations.map(movie => `
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+                                <div class="relative pb-2/3">
+                                    <img src="${movie.poster}" alt="${movie.title} poster" class="absolute h-full w-full object-cover">
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="font-bold text-lg mb-2">${movie.title}</h3>
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-gray-600">${movie.year}</span>
+                                        <span class="ml-2 text-gray-600">${movie.genre}</span>
+                                    </div>
+                                    <p class="text-gray-700">${movie.description}</p>
+                                </div>
+                            </div>
+                        `).join('');
+                        document.getElementById('watchWithModal').classList.add('hidden');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(`Failed to get recommendations: ${error.message}`);
+                    });
+            }
+        });
     </script>
 </body>
 </html>

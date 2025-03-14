@@ -294,19 +294,25 @@ def rate_movie():
 @app.route('/api/get_recommendations', methods=['GET'])
 def get_recommendations():
     username = request.args.get('username')
+    other_username = request.args.get('otherUsername')
 
     if not username:
         return jsonify({"error": "用户名不能为空"}), 400
 
-    # 加载用户数据和评分数据
+    # Load user data and ratings data
     users = load_users()
-    ratings = load_ratings()
 
     if username not in users:
         return jsonify({"error": "用户不存在"}), 404
 
-    # Get recommendations by calling user_rec from recommender.py
-    recommendations = user_rec(username)
+    if other_username:
+        if other_username not in users:
+            return jsonify({"error": "另一个用户不存在"}), 404
+        # Get recommendations for both users
+        recommendations = user_rec([username, other_username])
+    else:
+        # Get recommendations for a single user
+        recommendations = user_rec(username)
 
     return jsonify({"recommendations": recommendations})
 

@@ -54,5 +54,13 @@
         103
       ]
     }
+  },
+  "111": {
+    "completed_cold_start": false,
+    "preferences": {
+      "liked": [],
+      "disliked": []
+    },
+    "comments": []
   }
 }
