@@ -49,24 +49,41 @@ def get_name_by_id(csv_filepath, target_id):
                 return row[name_index]
     return None
 
-def user_rec(profile):
+def extend_unique(list1, list2):
+    for item in list2:
+        if item not in list1:
+            list1.append(item)
+    return list1
 
-    ids = user_preferences.get(profile, {}).get("liked", [])
-    disliked = user_preferences.get(profile, {}).get("disliked", [])
+def user_rec(profiles):
 
-    movie_ids = ids
-    top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked, top_k=8)
+    movie_ids = []
+    disliked_movies = []
+
+    if isinstance(profiles, list):
+        for profile in profiles:
+            ids = user_preferences.get(profile, {}).get("liked", [])
+            disliked = user_preferences.get(profile, {}).get("disliked", [])
+            extend_unique(movie_ids, ids)
+            extend_unique(disliked_movies, disliked)
+    if isinstance(profiles, str):
+        ids = user_preferences.get(profiles, {}).get("liked", [])
+        disliked = user_preferences.get(profiles, {}).get("disliked", [])
+        extend_unique(movie_ids, ids)
+        extend_unique(disliked_movies, disliked)
+
+    print(movie_ids)
+    print(disliked_movies)
+
+    top_k_movies, scores = get_movie_recommendations(movie_ids, movie_embeddings, disliked_movies, top_k=8)
 
     data = read_json_file('node_index_to_imdb.json')
     df = pd.read_csv("cleaned_movies.csv")
-
-
 
     imdb_to_metadata = dict(zip(df["movie_id"], df["genre"])) # Map IMDb ID to Genre
     imdb_to_metadata2 = dict(zip(df["movie_id"], df["rating"]))
     imdb_to_metadata3 = dict(zip(df["movie_id"], df["year"]))
     imdb_to_metadata4 = dict(zip(df["movie_id"], df["description"]))
-
 
     recommendations = []
     for idx in top_k_movies:
@@ -85,4 +102,5 @@ def user_rec(profile):
         })
 
     return recommendations
+
 
